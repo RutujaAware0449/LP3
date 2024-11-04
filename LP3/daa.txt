@@ -1,0 +1,370 @@
+***huffman_codin***
+import heapq
+from collections import defaultdict
+
+# Node class to represent each character in the Huffman Tree
+class Node:
+    def _init_(self, char, freq):
+        self.char = char
+        self.freq = freq
+        self.left = None
+        self.right = None
+
+    # Comparison method to ensure the node can be compared in the priority queue
+    def _lt_(self, other):
+        return self.freq < other.freq
+
+# Function to build the Huffman Tree
+def build_huffman_tree(text):
+    # Count frequency of each character in the text
+    frequency = defaultdict(int)
+    for char in text:
+        frequency[char] += 1
+
+    # Create a priority queue (min-heap) from the frequency dictionary
+    priority_queue = [Node(char, freq) for char, freq in frequency.items()]
+    heapq.heapify(priority_queue)
+
+    # Build the Huffman Tree
+    while len(priority_queue) > 1:
+        # Extract the two nodes with the lowest frequency
+        left = heapq.heappop(priority_queue)
+        right = heapq.heappop(priority_queue)
+
+        # Create a new internal node with these two nodes as children
+        merged = Node(None, left.freq + right.freq)
+        merged.left = left
+        merged.right = right
+
+        # Add the merged node back to the priority queue
+        heapq.heappush(priority_queue, merged)
+
+    # The remaining node is the root of the Huffman Tree
+    return priority_queue[0]
+
+# Function to generate Huffman codes from the Huffman Tree
+def generate_codes(node, current_code="", codes={}):
+    if node is None:
+        return
+
+    # If this node is a leaf node, it contains a character
+    if node.char is not None:
+        codes[node.char] = current_code
+        return
+
+    # Traverse the left and right children to generate codes
+    generate_codes(node.left, current_code + "0", codes)
+    generate_codes(node.right, current_code + "1", codes)
+
+    return codes
+
+# Function to encode the text using the generated Huffman codes
+def huffman_encoding(text):
+    # Build the Huffman Tree
+    root = build_huffman_tree(text)
+
+    # Generate Huffman codes from the tree
+    huffman_codes = generate_codes(root)
+
+    # Encode the input text
+    encoded_text = ''.join(huffman_codes[char] for char in text)
+
+    return encoded_text, huffman_codes
+
+# Function to decode the encoded text
+def huffman_decoding(encoded_text, huffman_codes):
+    # Reverse the Huffman codes for decoding
+    reverse_codes = {v: k for k, v in huffman_codes.items()}
+    print("Reverse codes",reverse_codes)
+    current_code = ""
+    decoded_text = ""
+
+    # Traverse the encoded text and decode it
+    for bit in encoded_text:
+        current_code += bit
+        if current_code in reverse_codes:
+            decoded_text += reverse_codes[current_code]
+            current_code = ""
+
+    return decoded_text
+
+# Main execution
+if _name_ == "_main_":
+    # text = "Huffman encoding is a data compression algorithm."
+    text = "BCCABBDDAECCBBAEDDCC"
+    print(f"Original Text: {text}")
+
+    # Perform Huffman encoding
+    encoded_text, huffman_codes = huffman_encoding(text)
+    print(f"Encoded Text: {encoded_text}")
+
+    # Decode the encoded text
+    decoded_text = huffman_decoding(encoded_text, huffman_codes)
+    print(f"Decoded Text: {decoded_text}")
+
+    print("Huffman Codes:", huffman_codes)
+
+***Fractional Knapsack***
+#Fractioanl Knapsack problem
+
+class Items:
+    def _init_(self,value,weight):
+        self.value=value
+        self.weight=weight
+        self.ratio=value/weight
+
+def bubble_sort(items):
+    n=len(items)
+    #bubble sort based on value to weight ratio in desceding order
+    for i in range (n):
+        for j in range (n-i-1):
+            if items[j].ratio < items[j+1].ratio:
+                items[j],items[j+1]=items[j+1],items[j]
+
+def Fractional_knap(capacity,items):
+    bubble_sort(items)
+
+    total_val=0.0
+    for item in items:
+        if capacity==0:
+            return
+        if item.weight< capacity:
+            total_val+=item.value
+            capacity=capacity-item.weight
+        else:
+            total_val=total_val+item.ratio*capacity
+            capacity=0
+
+    return total_val
+
+if _name=="main_":
+    n=int(input("Enter the Number of items: "))
+    items=[]
+
+    for i in range(n):
+        value=float(input(f"Enter value of item {i+1}: "))
+        weight=float(input(f"Enter the weight of item {i+1}: "))
+        items.append(Items(value,weight))
+    capacity=float(input("Enter the Capacity of bag: "))
+
+    max_value=Fractional_knap(capacity,items)
+    print(f"Maximum value in the knapsack: {max_value:.2f}")
+
+***0/1 Knapsack***
+
+def Knapsack_using_DP(profit,weight,capacity):
+    n=len(profit)
+    dp=[[0 for _ in range(capacity+1)] for _ in range(n+1)]
+    
+    for i in range(n+1):
+        for w in range(capacity+1):
+            if w==0 or i==0:
+                dp[i][w]=0
+            elif weight[i-1]<=w:
+                dp[i][w]=max(profit[i-1]+dp[i-1][w-weight[i-1]],dp[i-1][w])
+            else:
+                dp[i][w]=dp[i-1][w]
+    selected_items=[]
+    i,w=n,capacity
+    while i>0 and w>0:
+        if dp[i][w]!=dp[i-1][w]:
+            selected_items.append(i-1)
+            w=w-weight[i-1]
+        i=i-1
+    return dp[n][capacity],selected_items
+    
+if _name=="main_":
+    n=int(input("Enter the total no of objects: "))
+    profit=[]
+    weight=[]
+    for i in range(n):
+        ele=int(input(f"Enter the profit of {i+1}th object: "))
+        profit.append(ele)
+    for i in range(n):
+        ele=int(input(f"Enter the weight of {i+1}th object: "))
+        weight.append(ele)
+    capacity=int(input("Enter the capacity of the element: "))
+    ans,selected_items=Knapsack_using_DP(profit,weight,capacity)
+    print("The maximum profit is: ",ans)
+    for i in selected_items:
+        print(f'item: {i+1} and its weight: {weight[i]} and profit: {profit[i]}')
+
+***quick Sort***
+import random
+import time
+
+# Deterministic Quick Sort
+def deterministic_partition(arr, low, high):
+    pivot = arr[high]
+    i = low - 1
+    
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i = i + 1
+            arr[i], arr[j] = arr[j], arr[i]
+    
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+def deterministic_quick_sort(arr, low, high):
+    if low < high:
+        pi = deterministic_partition(arr, low, high)
+        deterministic_quick_sort(arr, low, pi - 1)
+        deterministic_quick_sort(arr, pi + 1, high)
+
+# Randomized Quick Sort
+def randomized_partition(arr, low, high):
+    rand_index = random.randint(low, high)
+    arr[high], arr[rand_index] = arr[rand_index], arr[high]
+    return deterministic_partition(arr, low, high)
+
+def randomized_quick_sort(arr, low, high):
+    if low < high:
+        pi = randomized_partition(arr, low, high)
+        randomized_quick_sort(arr, low, pi - 1)
+        randomized_quick_sort(arr, pi + 1, high)
+
+# Utility function to analyze both algorithms
+def analyze_quick_sorts(arr):
+    arr_copy = arr.copy()
+
+    # Deterministic Quick Sort
+    start = time.time()
+    deterministic_quick_sort(arr, 0, len(arr) - 1)
+    end = time.time()
+    print(f"Deterministic Quick Sort Time: {end - start} seconds")
+
+    # Randomized Quick Sort
+    start = time.time()
+    randomized_quick_sort(arr_copy, 0, len(arr_copy) - 1)
+    end = time.time()
+    print(f"Randomized Quick Sort Time: {end - start} seconds")
+
+# Sample array for sorting
+arr = [12, 4, 56, 17, 8, 99, 34, 23, 75, 3, 15]
+analyze_quick_sorts(arr)
+print("Sorted array (Deterministic):", arr)
+
+***n queen***
+
+def print_board(board):
+    """Utility function to print the board."""
+    for row in board:
+        print(" ".join(row))
+    print()
+
+def is_safe(board, row, col):
+    """Check if it's safe to place a queen at board[row][col]."""
+    # Check this column on upper side
+    for i in range(row):
+        if board[i][col] == 'Q':
+            return False
+
+    # Check upper diagonal on left side
+    for i, j in zip(range(row, -1, -1), range(col, -1, -1)):
+        if j < 0:  # boundary check
+            break
+        if board[i][j] == 'Q':
+            return False
+
+    # Check upper diagonal on right side
+    for i, j in zip(range(row, -1, -1), range(col, len(board))):
+        if j >= len(board):  # boundary check
+            break
+        if board[i][j] == 'Q':
+            return False
+
+    return True
+
+def solve_n_queens(board, row):
+    """Using backtracking to solve the N-Queens problem."""
+    if row >= len(board):  # All queens are placed
+        print_board(board)
+        return True
+
+    for col in range(len(board)):
+        if is_safe(board, row, col):
+            board[row][col] = 'Q'  # Place queen
+            solve_n_queens(board, row + 1)  # Recur to place the rest
+            board[row][col] = '.'  # Backtrack
+
+    return False
+
+def place_first_queen_and_solve(first_row, first_col):
+    """Place the first queen and start solving the N-Queens problem."""
+    board = [['.' for _ in range(8)] for _ in range(8)]
+    board[first_row][first_col] = 'Q'  # Place the first queen
+    print(f"Placing the first queen at ({first_row}, {first_col})")
+    solve_n_queens(board, 1)  # Start from the next row
+
+# Example usage
+if _name_ == "_main_":
+    first_row = 0  # Row to place the first queen
+    first_col = 0  # Column to place the first queen
+    place_first_queen_and_solve(first_row, first_col)
+
+***Fibonacci***
+
+
+def printFibonacci(n, a=0, b=1):
+    if n > 0:
+        n3 = a + b
+        print(n3, end=" ")
+        printFibonacci(n - 1, b, n3)
+
+if __name__ == "__main__":
+    n = int(input("Enter the number of elements: "))
+    print("Fibonacci Series: ", end="")
+    print("0 1 ", end="")
+    printFibonacci(n - 2)  # n-2 because 2 numbers are already printed
+
+def fibonacci_iterative(n:int):
+    if n == 1:
+        return 0
+    elif n == 2:
+        return 1
+    else:
+        dp = [0] * n
+        dp[0] = 0
+        dp[1] = 1
+        for i in range(2,n):
+            dp[i] = dp[i-1] + dp[i-2]
+        return dp[n-1]
+
+def fibonacci_recursive(n):
+    cache = {
+        1:0,
+        2:1
+    }
+    return helper(n,cache)
+
+def helper(n:int,cache):
+    if n in cache:
+        return cache[n]
+    else:
+        return helper(n-1,cache) + helper(n-2,cache)
+
+
+n = int(input("Enter value of n(nth Fibonacci number): "))
+print(f"Fibonacci Number(Iterative): {fibonacci_iterative(n)}")
+print(f"Fibonacci Number(Recursive): {fibonacci_recursive(n)}")
+
+def print_fibonacci(number):
+    """Prints the Fibonacci series up to the specified number of elements.
+
+    Args:
+        number: The number of elements to print.
+    """
+
+    n1, n2 = 0, 1
+    print(n1, n2, end=" ")
+
+    for i in range(2, number):
+        n3 = n1 + n2
+        print(n3, end=" ")
+        n1, n2 = n2, n3
+
+if __name__ == "__main__":
+    number = int(input("Enter the number of elements: "))
+    print_fibonacci(number)
+
